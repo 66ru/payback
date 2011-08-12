@@ -23,6 +23,8 @@ class BaseRESTTest(TestCase):
 
         self.c = InternetClient()
 
+        self.url = None
+
     def post(self, params):
         return self.c.post(self.url, params)
 
@@ -57,6 +59,21 @@ class CreatePaymentTest(BaseRESTTest):
     def setUp(self):
         super(CreatePaymentTest, self).setUp()
         self.url = reverse('create_payment')
+
+    def test_backend_changed(self):
+        p = Payment.create(self.user, 23, self.cur.code)
+        self.assertEqual(p.backend, self.payment_backend)
+
+        new_backend = PaymentBackend()
+        new_backend.save()
+        self.cur.payment_backend = new_backend
+        self.cur.save()
+
+        self.assertEqual(p.backend, self.payment_backend)
+
+        p2 = Payment.create(self.user, 24, self.cur.code)
+        self.assertEqual(p2.backend, new_backend)
+
 
     def test_create_payment_rest_annon403(self):
         annon_resp = self.c.post(self.url, {})

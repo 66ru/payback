@@ -67,7 +67,7 @@ class Payment(models.Model):
     status_message = models.TextField(blank=True)
 
     @classmethod
-    def create(cls, user, amount, currency_code, comment, success_url, fail_url):
+    def create(cls, user, amount, currency_code, comment='', success_url='', fail_url=''):
         client = Client.objects.get(user=user)
         currency = Currency.objects.get(code=currency_code)
         backend = currency.payment_backend
