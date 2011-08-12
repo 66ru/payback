@@ -28,6 +28,9 @@ class BaseRESTTest(TestCase):
     def post(self, params):
         return self.c.post(self.url, params)
 
+    def login(self):
+        self.c.login(username='test', password='test')
+
     def tearDown(self):
         self.c.logout()
         self.client_user.delete()
@@ -78,9 +81,6 @@ class CreatePaymentTest(BaseRESTTest):
     def test_create_payment_rest_annon403(self):
         annon_resp = self.c.post(self.url, {})
         self.assertEqual(annon_resp.status_code, 403)
-
-    def login(self):
-        self.c.login(username='test', password='test')
 
     def test_create_payment_rest_ok(self):
         self.login()
@@ -164,3 +164,25 @@ class CreatePaymentTest(BaseRESTTest):
         req5 = self.post(params)
         result = json.loads(req5.content)
         self.assertEqual(result['status'], 'invalid form')
+
+class StatusTest(BaseRESTTest):
+    def setUp(self):
+        super(StatusTest, self).setUp()
+        self.p = Payment.objects.create(amount=4000, currency=self.cur, client=self.client_user, backend=self.payment_backend)
+        self.url = reverse('payment_status', args=[self.p.id])
+
+    def test_status_annon(self):
+        result = self.c.get(self.url)
+        self.assertEqual(result.status_code, 403)
+
+    def test_status_404(self):
+        self.login()
+        result = self.c.get(reverse('payment_status', args=[10000]))
+        self.assertEqual(result.status_code, 404)
+
+    def test_status_ok(self):
+        self.login()
+        result = self.c.get(self.url)
+        self.assertEqual(result.status_code, 200)
+        result_o = json.loads(result.content)
+        self.assertEqual(result_o['status'], 'IN PROGRESS')

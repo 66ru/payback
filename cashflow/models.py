@@ -70,6 +70,10 @@ class Payment(models.Model):
     def get_module(self, fromlist=['*']):
         return self.backend.get_module(fromlist=fromlist)
 
+    def get_status(self):
+        status_dict = dict(self.STATUS_CHOICES)
+        return status_dict[self.status]
+
     @classmethod
     def create(cls, user, amount, currency_code, comment='', success_url='', fail_url=''):
         client = Client.objects.get(user=user)

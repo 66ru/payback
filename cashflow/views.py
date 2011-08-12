@@ -3,7 +3,6 @@ from functools import wraps
 import json
 from django.http import HttpResponse
 from django.utils.decorators import available_attrs
-from django.utils.http import urlquote
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from cashflow.backends.common import SendPaymentFailureException
@@ -78,8 +77,21 @@ def create_payment(request):
     return response_json({'status': 'invalid form', 'data': form.data})
 
 
+@login_required_403
+@csrf_exempt
 def status(request, id):
-    pass
+    client = Client.objects.get(user=request.user)
+    try:
+        p = Payment.objects.get(pk=id)
+        if p.client.user != request.user:
+            return HttpResponse(status=403)
+    except Payment.DoesNotExist:
+        return HttpResponse(status=404)
+
+    return response_json({
+        'status': p.get_status(),
+        'status_message': p.status_message,
+    })
 
 
 def success(request, id):
