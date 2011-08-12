@@ -1,8 +1,12 @@
-def process_payment(_):
+#-*- coding: UTF-8 -*-
+def send_payment(payment):
+    """
+    Отправляет платеж в кассу.
+    """
     return True
 
-def on_success():
-    pass
+def success(payment):
+    return True
 
-def on_fail():
-    pass
+def fail(payment):
+    return True

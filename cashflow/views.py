@@ -6,6 +6,7 @@ from django.utils.decorators import available_attrs
 from django.utils.http import urlquote
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from cashflow.backends.common import SendPaymentFailureException
 from cashflow.forms import PaymentForm
 from models import *
 
@@ -23,7 +24,6 @@ def user_passes_test_403(test_func):
         def _wrapped_view(request, *args, **kwargs):
             if test_func(request.user):
                 return view_func(request, *args, **kwargs)
-            path = urlquote(request.get_full_path())
             return HttpResponse(status=403)
         return wraps(view_func, assigned=available_attrs(view_func))(_wrapped_view)
     return decorator
@@ -60,16 +60,31 @@ def create_payment(request):
         success_url = form.cleaned_data['success_url']
 
         p = Payment.create(user, amount, currency_code, comment, success_url, fail_url)
-        return response_json({
-            'status': 'ok',
-            'payment_id': p.id
-        })
+
+        ret = {'payment_id': p.id}
+        module = p.get_module(fromlist=['send_payment'])
+        try:
+            module.send_payment(p)
+            p.status = Payment.STATUS_SUCCESS
+            ret['status'] = 'ok'
+        except SendPaymentFailureException as ex:
+            p.status = Payment.STATUS_FAILED
+            p.status_message = ex.get_message()
+        finally:
+            p.save()
+
+        return response_json(ret)
+
     return response_json({'status': 'invalid form', 'data': form.data})
 
 
-def success(request):
+def status(request, id):
     pass
 
 
-def fail(request):
+def success(request, id):
+    pass
+
+
+def fail(request, id):
     pass

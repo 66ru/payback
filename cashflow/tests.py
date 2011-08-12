@@ -16,7 +16,7 @@ class BaseRESTTest(TestCase):
         client_user.save()
         self.client_user = client_user
 
-        self.payment_backend = PaymentBackend()
+        self.payment_backend = PaymentBackend(module='cashflow.backends.test_backend')
         self.payment_backend.save()
         self.cur = Currency(title='Ya money', code='YANDEX', payment_backend=self.payment_backend)
         self.cur.save()
@@ -101,6 +101,7 @@ class CreatePaymentTest(BaseRESTTest):
         self.assertEqual(p.currency, self.cur)
         self.assertEqual(p.backend, self.payment_backend)
         self.assertEqual(p.client, self.client_user)
+        self.assertEqual(p.status, Payment.STATUS_SUCCESS)
 
 
     def test_create_payment_rest_minimum(self):

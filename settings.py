@@ -92,4 +92,6 @@ INSTALLED_APPS = (
     'payback.cashflow',
 )
 
-PAYMENT_BACKENDS_ENABLED = ()
+PAYMENT_BACKENDS_ENABLED = (
+    'cashflow.backends.test_backend',
+)

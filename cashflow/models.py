@@ -9,6 +9,9 @@ class PaymentBackend(models.Model):
                               choices=[(g, g)
                                         for g in settings.PAYMENT_BACKENDS_ENABLED])
 
+    def get_module(self, fromlist=['*']):
+        return __import__(self.module, globals(), locals(), fromlist=fromlist, level=0)
+
     def __unicode__(self):
         return self.module
 
@@ -45,14 +48,12 @@ class Currency(models.Model):
 class Payment(models.Model):
     STATUS_IN_PROGRESS = '0'
     STATUS_SUCCESS = '1'
-    STATUS_FAILED_INNER = '2'
-    STATUS_FAILED_PROVIDER = '3'
+    STATUS_FAILED = '2'
 
     STATUS_CHOICES = (
             (STATUS_IN_PROGRESS, 'IN PROGRESS'),
             (STATUS_SUCCESS, 'OK'),
-            (STATUS_FAILED_INNER, 'INNER FAILURE'),
-            (STATUS_FAILED_PROVIDER, 'PROVIDER FAILURE'),
+            (STATUS_FAILED, 'FAILED'),
         )
 
     client = models.ForeignKey(Client)
@@ -65,6 +66,9 @@ class Payment(models.Model):
     fail_url = models.URLField(blank=True)
     status = models.CharField(max_length=1, default=STATUS_IN_PROGRESS)
     status_message = models.TextField(blank=True)
+
+    def get_module(self, fromlist=['*']):
+        return self.backend.get_module(fromlist=fromlist)
 
     @classmethod
     def create(cls, user, amount, currency_code, comment='', success_url='', fail_url=''):
