@@ -51,10 +51,10 @@ class Payment(models.Model):
             (STATUS_FAILED_PROVIDER, 'PROVIDER FAILURE'),
         )
 
-    # TODO: client
+    client = models.ForeignKey(Client)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.ForeignKey(Currency)
-    # TODO: backend (не должен меняться, если что-то поменяется в валюте)
+    backend = models.ForeignKey(PaymentBackend)
     created = models.DateTimeField(auto_now_add=True)
     comment = models.TextField(blank=True)
     success_url = models.URLField(blank=True)
