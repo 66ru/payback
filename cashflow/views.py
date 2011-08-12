@@ -80,7 +80,6 @@ def create_payment(request):
 @login_required_403
 @csrf_exempt
 def status(request, id):
-    client = Client.objects.get(user=request.user)
     try:
         p = Payment.objects.get(pk=id)
         if p.client.user != request.user:
