@@ -95,7 +95,6 @@ class CreatePaymentTest(BaseRESTTest):
         req = self.post(params)
         result = json.loads(req.content)
         self.assertEqual(result['status'], 'ok')
-        self.assertEqual(result['payment_id'], 1)
         p = Payment.objects.get()
         self.assertEqual(p.amount, Decimal('42.5'))
         self.assertEqual(p.currency, self.cur)

@@ -1,12 +1,9 @@
 #-*- coding: UTF-8 -*-
 def send_payment(payment):
-    """
-    Отправляет платеж в кассу.
-    """
     return True
 
-def success(payment):
+def success(request, payment):
     return True
 
-def fail(payment):
+def fail(request, payment):
     return True

@@ -5,7 +5,6 @@ from django.http import HttpResponse
 from django.utils.decorators import available_attrs
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from cashflow.backends.common import SendPaymentFailureException
 from cashflow.forms import PaymentForm
 from models import *
 
@@ -60,17 +59,19 @@ def create_payment(request):
 
         p = Payment.create(user, amount, currency_code, comment, success_url, fail_url)
 
-        ret = {'payment_id': p.id}
+        ret = {}
         module = p.get_module(fromlist=['send_payment'])
-        try:
-            module.send_payment(p)
-            p.status = Payment.STATUS_SUCCESS
-            ret['status'] = 'ok'
-        except SendPaymentFailureException as ex:
-            p.status = Payment.STATUS_FAILED
-            p.status_message = ex.get_message()
-        finally:
-            p.save()
+        #try:
+        module.send_payment(p)
+        p.status = Payment.STATUS_SUCCESS
+        ret['status'] = 'ok'
+        #except SendPaymentFailureException as ex:
+        #    p.status = Payment.STATUS_FAILED
+        #    p.status_message = ex.get_message()
+        #    ret['status'] = 'failed'
+        #    ret['status_message'] = p.status_message
+        #finally:
+        p.save()
 
         return response_json(ret)
 
@@ -93,9 +94,19 @@ def status(request, id):
     })
 
 
+@csrf_exempt
 def success(request, id):
-    pass
+    try:
+        payment = Payment.objects.get(pk=id)
+    except Payment.DoesNotExist:
+        return HttpResponse(status=404)
 
+    #module = payment.get_module(fromlist=['success'])
+    #f = getattr(module, 'success')
 
+    payment.status = Payment.STATUS_SUCCESS
+    payment.save()
+
+@csrf_exempt
 def fail(request, id):
     pass
