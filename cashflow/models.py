@@ -30,8 +30,12 @@ class PaymentBackend_Client(models.Model):
 
 class Currency(models.Model):
     title = models.CharField(max_length=50)
-    code = models.CharField(max_length=15) # для распознавания в запросах пользователей
-    payment_backend = models.ForeignKey(PaymentBackend)
+    code = models.SlugField(max_length=15, unique=True) # для распознавания в запросах пользователей
+    payment_backend = models.ForeignKey(PaymentBackend, blank=True, null=True)
+
+    @classmethod
+    def get_listing(cls):
+        return [c.code for c in cls.objects.filter(payment_backend__isnull=False)]
 
     def __unicode__(self):
         return '%s: %s' % (self.code, self.title,)
@@ -62,6 +66,19 @@ class Payment(models.Model):
     status = models.CharField(max_length=1, default=STATUS_IN_PROGRESS)
     status_message = models.TextField(blank=True)
 
+    @classmethod
+    def create(cls, user, amount, currency_code, comment, success_url, fail_url):
+        client = Client.objects.get(user=user)
+        currency = Currency.objects.get(code=currency_code)
+        backend = currency.payment_backend
+
+        return Payment.objects.create(client=client,
+                                      amount=amount,
+                                      currency=currency,
+                                      backend=backend,
+                                      comment=comment,
+                                      success_url=success_url,
+                                      fail_url=fail_url)
 
     class Meta:
         permissions = (('view_payment', 'Can view payments'),)

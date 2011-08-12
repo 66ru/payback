@@ -1,23 +1,82 @@
-"""
-This file demonstrates two different styles of tests (one doctest and one
-unittest). These will both pass when you run "manage.py test".
-
-Replace these with more appropriate tests for your application.
-"""
+#-*- coding: UTF-8 -*-
+from decimal import Decimal
+import json
 
 from django.test import TestCase
+from django.test.client import Client as InternetClient
+from cashflow.models import *
 
 class SimpleTest(TestCase):
-    def test_basic_addition(self):
-        """
-        Tests that 1 + 1 always equals 2.
-        """
-        self.failUnlessEqual(1 + 1, 2)
+    def setUp(self):
+        user = User.objects.create_user('test', 'test', password='test')
+        self.user = user
 
-__test__ = {"doctest": """
-Another way to test that 1 + 1 is equal to 2.
+        client_user = Client(user=user)
+        client_user.save()
+        self.client_user = client_user
 
->>> 1 + 1 == 2
-True
-"""}
+        self.payment_backend = PaymentBackend()
+        self.payment_backend.save()
+        self.cur = Currency(title='Ya money', code='YANDEX', payment_backend=self.payment_backend)
+        self.cur.save()
 
+    def tearDown(self):
+        self.client_user.delete()
+        self.user.delete()
+        self.payment_backend.delete()
+        self.cur.delete()
+
+    def test_listing(self):
+        listing = Currency.get_listing()
+        self.assertTrue(self.cur.code in listing)
+
+    def test_list_rest(self):
+        c = InternetClient()
+        annon_resp = c.post('/c/currs_list', {})
+        self.assertEqual(annon_resp.status_code, 403)
+
+        c.login(username='test', password='test')
+        logged_in_resp = c.post('/c/currs_list', {})
+        o = json.loads(logged_in_resp.content)
+        self.assertTrue(self.cur.code in o['currs_list'])
+
+    def test_create_payment_rest(self):
+        c = InternetClient()
+        url = '/c/create_payment'
+
+        annon_resp = c.post(url, {})
+        self.assertEqual(annon_resp.status_code, 403)
+
+        c.login(username='test', password='test')
+        # все четко
+        params = {
+            'amount': 42.50,
+            'currency_code': self.cur.code,
+            'comment': 'za gaz',
+            'success_url': 'http://66.ru/success/',
+            'fail_url': 'http://66.ru/fail/',
+        }
+        req = c.post(url, params)
+        result = json.loads(req.content)
+        self.assertEqual(result['status'], 'ok')
+        self.assertEqual(result['payment_id'], 1)
+        p = Payment.objects.get(pk=1)
+        self.assertEqual(p.amount, Decimal('42.5'))
+        self.assertEqual(p.currency, self.cur)
+        self.assertEqual(p.backend, self.payment_backend)
+        self.assertEqual(p.client, self.client_user)
+
+
+        # все по минимуму
+        params = {
+            'amount': 42.50,
+            'currency_code': self.cur.code,
+        }
+        req1 = c.post(url, params)
+        result = json.loads(req1.content)
+        self.assertEqual(result['status'], 'ok')
+        p = Payment.objects.get(pk=2)
+        self.assertEqual(p.amount, Decimal('42.5'))
+        self.assertEqual(p.currency, self.cur)
+        self.assertEqual(p.backend, self.payment_backend)
+        self.assertEqual(p.client, self.client_user)
