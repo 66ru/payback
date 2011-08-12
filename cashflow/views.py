@@ -54,10 +54,10 @@ def create_payment(request):
     if form.is_valid():
         user = request.user
         amount = form.cleaned_data['amount']
-        currency_code = form.cleaned_data['currency_code']
         comment = form.cleaned_data['comment']
-        success_url = form.cleaned_data['success_url']
+        currency_code = form.cleaned_data['currency_code']
         fail_url = form.cleaned_data['fail_url']
+        success_url = form.cleaned_data['success_url']
 
         p = Payment.create(user, amount, currency_code, comment, success_url, fail_url)
         return response_json({
