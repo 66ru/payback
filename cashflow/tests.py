@@ -101,3 +101,12 @@ class SimpleTest(TestCase):
         req3 = c.post(url, params)
         result = json.loads(req3.content)
         self.assertEqual(result['status'], 'invalid form')
+
+        # вариант с отрицательным числом
+        params = {
+            'amount': -200,
+            'currency_code': self.cur.code,
+        }
+        req4 = c.post(url, params)
+        result = json.loads(req4.content)
+        self.assertEqual(result['status'], 'invalid form')
