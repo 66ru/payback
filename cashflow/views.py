@@ -104,20 +104,7 @@ def _create_success_or_fail(str_type):
 
         module = b.get_module(fromlist=[str_type])
         f = getattr(module, str_type)
-
-        try:
-            if f(request):
-                # TODO: good no ex
-                # TODO: return some {}
-                pass
-            else:
-                # TODO: bad no ex
-                # TODO: return some {}
-                pass
-        except BaseException:
-            # TODO: bad failed
-            # TODO: return from ex
-            pass
+        return f(request)
 
     return _helper
 

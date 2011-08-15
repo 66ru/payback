@@ -42,11 +42,11 @@ class ClientBackend(models.Model):
 class Currency(models.Model):
     title = models.CharField(max_length=50)
     code = models.SlugField(max_length=15, unique=True) # для распознавания в запросах пользователей
-    payment_backend = models.ForeignKey(Backend, blank=True, null=True)
+    backend = models.ForeignKey(Backend, blank=True, null=True)
 
     @classmethod
     def get_listing(cls):
-        return [c.code for c in cls.objects.filter(payment_backend__isnull=False)]
+        return [c.code for c in cls.objects.filter(backend__isnull=False)]
 
     def __unicode__(self):
         return '%s: %s' % (self.code, self.title,)
@@ -86,7 +86,7 @@ class Payment(models.Model):
     def create(cls, user, amount, currency_code, comment='', success_url='', fail_url=''):
         client = Client.objects.get(user=user)
         currency = Currency.objects.get(code=currency_code)
-        backend = currency.payment_backend
+        backend = currency.backend
 
         return Payment.objects.create(client=client,
                                       amount=amount,

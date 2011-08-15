@@ -9,9 +9,3 @@ class CashflowBaseException(BaseException):
 
 class SendPaymentFailureException(CashflowBaseException):
     pass
-
-
-class RedirectNeededException(CashflowBaseException):
-    def __init__(self, url, message, *args, **kwargs):
-        super(RedirectNeededException, self).__init__(message, *args, **kwargs)
-        self.url = url
