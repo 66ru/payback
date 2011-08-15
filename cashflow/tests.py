@@ -46,6 +46,7 @@ class RoboTest(BaseRESTTest):
 
         self.robo_backend = Backend(module='cashflow.backends.robokassa_backend', slug='robo')
         self.robo_backend.save()
+        # доселе неизвестная валюта...
         self.robomoney = Currency(title='Robo money yall!', code='ROBO', backend=self.robo_backend)
         self.robomoney.save()
 
@@ -54,9 +55,9 @@ class RoboTest(BaseRESTTest):
 
         client_settings = ClientBackend(client=self.client_user, backend=self.robo_backend)
         client_settings.settings = \
-        ("[auth]\n" + \
-        "pass1 = %s\n" + \
-        "pass2 = %s\n") % (self.pass1, self.pass2,)
+        ("[auth]\n" +
+         "pass1 = %s\n" +
+         "pass2 = %s\n") % (self.pass1, self.pass2,)
         client_settings.save()
         self.client_settings = client_settings
 
