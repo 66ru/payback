@@ -16,7 +16,7 @@ class BaseRESTTest(TestCase):
         client_user.save()
         self.client_user = client_user
 
-        self.payment_backend = PaymentBackend(module='cashflow.backends.test_backend')
+        self.payment_backend = PaymentBackend(module='cashflow.backends.test_backend', slug='test')
         self.payment_backend.save()
         self.cur = Currency(title='Ya money', code='YANDEX', payment_backend=self.payment_backend)
         self.cur.save()
@@ -33,10 +33,10 @@ class BaseRESTTest(TestCase):
 
     def tearDown(self):
         self.c.logout()
-        self.client_user.delete()
-        self.user.delete()
-        self.payment_backend.delete()
-        self.cur.delete()
+        Client.objects.all().delete()
+        User.objects.all().delete()
+        PaymentBackend.objects.all().delete()
+        Currency.objects.all().delete()
 
 
 class ListingTest(BaseRESTTest):
@@ -67,7 +67,7 @@ class CreatePaymentTest(BaseRESTTest):
         p = Payment.create(self.user, 23, self.cur.code)
         self.assertEqual(p.backend, self.payment_backend)
 
-        new_backend = PaymentBackend()
+        new_backend = PaymentBackend(slug='test2')
         new_backend.save()
         self.cur.payment_backend = new_backend
         self.cur.save()

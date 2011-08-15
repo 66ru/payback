@@ -5,6 +5,7 @@ from django.db import models
 
 
 class PaymentBackend(models.Model):
+    slug = models.SlugField(unique=True)
     module = models.CharField(max_length=100,
                               choices=[(g, g)
                                         for g in settings.PAYMENT_BACKENDS_ENABLED])
