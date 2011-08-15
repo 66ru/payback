@@ -2,12 +2,14 @@
 from hashlib import md5
 from django import forms
 from django.http import HttpResponse, HttpResponseRedirect
+from cashflow.backends.common import RedirectNeededException
 from cashflow.models import Payment, ClientBackend
 
 ###
 # config:
 #
 # [auth]
+# login = login
 # pass1 = someting1
 # pass2 = someting2
 #
@@ -16,8 +18,25 @@ from cashflow.models import Payment, ClientBackend
 def sign(summ, inv_id, pwd):
     return md5(':'.join((str(summ), str(inv_id), pwd,))).hexdigest().upper()
 
-def send_payment(payment):
-    return True
+def send_payment(payment): # throws SendPaymentFailureException
+    client_backend = ClientBackend.objects.get(client=payment.client, backend=payment.backend)
+    cp = client_backend.get_config_parser()
+
+    login = cp.get('auth', 'login')
+    pwd = cp.get('auth', 'pass1')
+
+    url = "https://merchant.roboxchange.com/Index.aspx" + \
+          "?MrchLogin=%(login)s&OutSum=%(summ)s&" + \
+          "InvId=%(inv_id)s&Desc=%(comment)s&" + \
+          "SignatureValue=%(signature)s" % {
+              'login': login,
+              'summ' : payment.amount,
+              'inv_id' : payment.id,
+              'comment': payment.comment,
+              'signature': sign(payment.amount, payment.id, pwd),
+          }
+    raise RedirectNeededException(url, '(send payment): %s' % url)
+
 
 class SuccessForm(forms.Form):
     OutSum = forms.DecimalField(min_value=0)

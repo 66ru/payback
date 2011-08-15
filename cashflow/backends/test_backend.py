@@ -1,6 +1,8 @@
 #-*- coding: UTF-8 -*-
+from cashflow.backends.common import RedirectNeededException
+
 def send_payment(payment):
-    return True
+    raise RedirectNeededException('http://example.com/', message='wow!')
 
 def success(request):
     return True

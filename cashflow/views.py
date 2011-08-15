@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.utils.decorators import available_attrs
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from cashflow.backends.common import SendPaymentFailureException
+from cashflow.backends.common import SendPaymentFailureException, RedirectNeededException
 from cashflow.forms import PaymentForm
 from models import *
 
@@ -63,9 +63,11 @@ def create_payment(request):
         ret = {'payment_id': p.id}
         module = p.get_module(fromlist=['send_payment'])
         try:
-            module.send_payment(p)
+            module.send_payment(p) # для систем без редиректов нужен будет рефакторинг (например, новый Exception)
+        except RedirectNeededException as ex:
             p.status = Payment.STATUS_SUCCESS
             ret['status'] = 'ok'
+            ret['redirect_url'] = ex.get_url()
         except SendPaymentFailureException as ex:
             p.status = Payment.STATUS_FAILED
             p.status_message = ex.get_message()
