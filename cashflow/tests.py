@@ -164,6 +164,7 @@ class CreatePaymentTest(BaseRESTTest):
         result = json.loads(req5.content)
         self.assertEqual(result['status'], 'invalid form')
 
+
 class StatusTest(BaseRESTTest):
     def setUp(self):
         super(StatusTest, self).setUp()
@@ -185,3 +186,12 @@ class StatusTest(BaseRESTTest):
         self.assertEqual(result.status_code, 200)
         result_o = json.loads(result.content)
         self.assertEqual(result_o['status'], 'IN PROGRESS')
+
+
+class SuccessFailTest(BaseRESTTest):
+    def test_unknown_backend_404(self):
+        result = self.c.get(reverse('payment_success', args=['UNKNOWN_BACKEND_SLUG_YALL']))
+        self.assertEqual(result.status_code, 404)
+
+        result = self.c.get(reverse('payment_fail', args=['UNKNOWN_BACKEND_SLUG_YALL']))
+        self.assertEqual(result.status_code, 404)

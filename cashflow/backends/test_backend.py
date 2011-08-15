@@ -2,8 +2,8 @@
 def send_payment(payment):
     return True
 
-def success(request, payment):
+def success(request):
     return True
 
-def fail(request, payment):
+def fail(request):
     return True
