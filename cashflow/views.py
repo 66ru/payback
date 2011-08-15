@@ -60,7 +60,7 @@ def create_payment(request):
 
         p = Payment.create(user, amount, currency_code, comment, success_url, fail_url)
 
-        ret = {}
+        ret = {'payment_id': p.id}
         module = p.get_module(fromlist=['send_payment'])
         try:
             module.send_payment(p)
@@ -98,8 +98,8 @@ def status(request, id):
 def _create_success_or_fail(str_type):
     def _helper(request, backend_slug):
         try:
-            b = PaymentBackend.objects.get(slug=backend_slug)
-        except PaymentBackend.DoesNotExist:
+            b = Backend.objects.get(slug=backend_slug)
+        except Backend.DoesNotExist:
             return HttpResponse(status=404)
 
         module = b.get_module(fromlist=[str_type])

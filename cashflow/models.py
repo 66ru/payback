@@ -1,10 +1,12 @@
 #-*- coding: UTF-8 -*-
+import ConfigParser
+import io
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
 
 
-class PaymentBackend(models.Model):
+class Backend(models.Model):
     slug = models.SlugField(unique=True)
     module = models.CharField(max_length=100,
                               choices=[(g, g)
@@ -19,23 +21,28 @@ class PaymentBackend(models.Model):
 
 class Client(models.Model):
     user = models.OneToOneField(User)
-    backend_settings = models.ManyToManyField(PaymentBackend, through='PaymentBackend_Client')
+    backend_settings = models.ManyToManyField(Backend, through='ClientBackend', related_name='bs')
 
 
-class PaymentBackend_Client(models.Model):
+class ClientBackend(models.Model):
     client = models.ForeignKey(Client)
-    payment_backend = models.ForeignKey(PaymentBackend)
+    backend = models.ForeignKey(Backend)
 
     settings = models.TextField()
 
+    def get_config_parser(self):
+        conf_parser = ConfigParser.RawConfigParser()
+        conf_parser.readfp(io.BytesIO(str(self.settings)))
+        return conf_parser
+
     class Meta:
-        unique_together = ('client', 'payment_backend',)
+        unique_together = ('client', 'backend',)
     
 
 class Currency(models.Model):
     title = models.CharField(max_length=50)
     code = models.SlugField(max_length=15, unique=True) # для распознавания в запросах пользователей
-    payment_backend = models.ForeignKey(PaymentBackend, blank=True, null=True)
+    payment_backend = models.ForeignKey(Backend, blank=True, null=True)
 
     @classmethod
     def get_listing(cls):
@@ -60,7 +67,7 @@ class Payment(models.Model):
     client = models.ForeignKey(Client)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.ForeignKey(Currency)
-    backend = models.ForeignKey(PaymentBackend)
+    backend = models.ForeignKey(Backend)
     created = models.DateTimeField(auto_now_add=True)
     comment = models.TextField(blank=True)
     success_url = models.URLField(blank=True)

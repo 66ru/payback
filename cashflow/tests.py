@@ -16,7 +16,7 @@ class BaseRESTTest(TestCase):
         client_user.save()
         self.client_user = client_user
 
-        self.payment_backend = PaymentBackend(module='cashflow.backends.test_backend', slug='test')
+        self.payment_backend = Backend(module='cashflow.backends.test_backend', slug='test')
         self.payment_backend.save()
         self.cur = Currency(title='Ya money', code='YANDEX', payment_backend=self.payment_backend)
         self.cur.save()
@@ -35,7 +35,7 @@ class BaseRESTTest(TestCase):
         self.c.logout()
         Client.objects.all().delete()
         User.objects.all().delete()
-        PaymentBackend.objects.all().delete()
+        Backend.objects.all().delete()
         Currency.objects.all().delete()
 
 
@@ -67,7 +67,7 @@ class CreatePaymentTest(BaseRESTTest):
         p = Payment.create(self.user, 23, self.cur.code)
         self.assertEqual(p.backend, self.payment_backend)
 
-        new_backend = PaymentBackend(slug='test2')
+        new_backend = Backend(slug='test2')
         new_backend.save()
         self.cur.payment_backend = new_backend
         self.cur.save()
@@ -101,6 +101,7 @@ class CreatePaymentTest(BaseRESTTest):
         self.assertEqual(p.backend, self.payment_backend)
         self.assertEqual(p.client, self.client_user)
         self.assertEqual(p.status, Payment.STATUS_SUCCESS)
+        self.assertEqual(p.id, result['payment_id'])
 
 
     def test_create_payment_rest_minimum(self):
@@ -122,6 +123,7 @@ class CreatePaymentTest(BaseRESTTest):
         self.assertEqual(p.comment, '')
         self.assertEqual(p.success_url, '')
         self.assertEqual(p.fail_url, '')
+        self.assertEqual(p.id, result['payment_id'])
 
     def test_create_payment_rest_empty_form(self):
         self.login()
