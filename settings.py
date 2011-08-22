@@ -73,6 +73,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'gateauth.middleware.PartnerPostTokenMiddleware',
 )
 
 ROOT_URLCONF = 'payback.urls'
@@ -90,6 +91,7 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
     'payback.cashflow',
+    'gateauth',
 )
 
 PAYMENT_BACKENDS_ENABLED = (
