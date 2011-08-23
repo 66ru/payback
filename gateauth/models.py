@@ -63,7 +63,11 @@ class HashKey(models.Model):
 class IPRange(models.Model):
     ip_from = models.IPAddressField()
     ip_to = models.IPAddressField(blank=True, null=True)
+<<<<<<< HEAD
     hash_key = models.ForeignKey(HashKey, db_index=True, related_name='ips_allowed')
+=======
+    user = models.ForeignKey(User, db_index=True, related_name='ips_allowed')
+>>>>>>> ea3426dd617b050d74ce6818d4566382d50c2f47
 
     @staticmethod
     def _ipv4_to_int(ip):
