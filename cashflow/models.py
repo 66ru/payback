@@ -2,7 +2,7 @@
 import ConfigParser
 import io
 from django.conf import settings
-from gateauth.models import User
+from django.contrib.auth.models import User
 from django.db import models
 
 
