@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from django.utils.decorators import available_attrs
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from cashflow.backends.common import SendPaymentFailureException, RedirectNeededException
 from cashflow.forms import PaymentForm
 from models import *
 
@@ -59,19 +60,21 @@ def create_payment(request):
 
         p = Payment.create(user, amount, currency_code, comment, success_url, fail_url)
 
-        ret = {}
+        ret = {'payment_id': p.id}
         module = p.get_module(fromlist=['send_payment'])
-        #try:
-        module.send_payment(p)
-        p.status = Payment.STATUS_SUCCESS
-        ret['status'] = 'ok'
-        #except SendPaymentFailureException as ex:
-        #    p.status = Payment.STATUS_FAILED
-        #    p.status_message = ex.get_message()
-        #    ret['status'] = 'failed'
-        #    ret['status_message'] = p.status_message
-        #finally:
-        p.save()
+        try:
+            module.send_payment(p) # для систем без редиректов нужен будет рефакторинг (например, новый Exception)
+        except RedirectNeededException as ex:
+            p.status = Payment.STATUS_SUCCESS
+            ret['status'] = 'ok'
+            ret['redirect_url'] = ex.get_url()
+        except SendPaymentFailureException as ex:
+            p.status = Payment.STATUS_FAILED
+            p.status_message = ex.get_message()
+            ret['status'] = 'failed'
+            ret['status_message'] = p.status_message
+        finally:
+            p.save()
 
         return response_json(ret)
 
@@ -94,19 +97,18 @@ def status(request, id):
     })
 
 
-@csrf_exempt
-def success(request, id):
-    try:
-        payment = Payment.objects.get(pk=id)
-    except Payment.DoesNotExist:
-        return HttpResponse(status=404)
+def _create_success_or_fail(str_type):
+    def _helper(request, backend_slug):
+        try:
+            b = Backend.objects.get(slug=backend_slug)
+        except Backend.DoesNotExist:
+            return HttpResponse(status=404)
 
-    #module = payment.get_module(fromlist=['success'])
-    #f = getattr(module, 'success')
+        module = b.get_module(fromlist=[str_type])
+        f = getattr(module, str_type)
+        return f(request)
 
-    payment.status = Payment.STATUS_SUCCESS
-    payment.save()
+    return _helper
 
-@csrf_exempt
-def fail(request, id):
-    pass
+success = csrf_exempt(_create_success_or_fail('success'))
+fail = csrf_exempt(_create_success_or_fail('fail'))
