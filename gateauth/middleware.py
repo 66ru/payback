@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-from models import User
+from models import HashKey
 
 class PartnerPostTokenMiddleware(object):
     def process_request(self, request):
@@ -14,16 +14,16 @@ class PartnerPostTokenMiddleware(object):
         del params['sign']
 
         try:
-            user = User.objects.get(signature=sign)
-        except User.DoesNotExist:
+            user_hashkey = HashKey.objects.get(signature=sign)
+        except HashKey.DoesNotExist:
             return
 
         try:
-            tokens = User.tokens_range(-1, 1, params, unicode(sign))
+            tokens = HashKey.tokens_range(-1, 1, params, unicode(sign))
         except TypeError:
             return
 
         if token in tokens:
-            request.user = user.name
+            request.user = user_hashkey.user
 
         return

@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 from django.db import models
+from django.contrib.auth.models import User
 import string
 import random
 import hashlib
@@ -15,8 +16,8 @@ def randstring_creator(count):
     return _randstring
 
 
-class User(models.Model):
-    name = models.CharField(max_length=20, verbose_name=u'Пользователь', unique=True)
+class HashKey(models.Model):
+    user = models.OneToOneField(User, max_length=20, verbose_name=u'Пользователь', unique=True)
     signature = models.CharField(max_length=20, unique=True, default=randstring_creator(20))
 
     @staticmethod
@@ -27,7 +28,7 @@ class User(models.Model):
     def get_token(params, salt, date=u''):
         items = sorted(params.iteritems())
         hash = u'&'.join([u'='.join((unicode(k), unicode(v))) for k, v in items])
-        date = date or User.date2utc2str(datetime.now())
+        date = date or HashKey.date2utc2str(datetime.now())
 
         #прибаляем дату в формате UTC2 и применяем sha1
         hash = hashlib.sha1(u''.join((hash, date))).hexdigest()
@@ -51,8 +52,8 @@ class User(models.Model):
         fromtimestamp = datetime.fromtimestamp
         timestamp = time.time()
 
-        utc2_dates = [User.date2utc2str(fromtimestamp(timestamp + 3600*i))  for i in xrange(start, stop+1)]
-        tokens = [User.get_token(params, salt, date) for date in utc2_dates]
+        utc2_dates = [HashKey.date2utc2str(fromtimestamp(timestamp + 3600*i))  for i in xrange(start, stop+1)]
+        tokens = [HashKey.get_token(params, salt, date) for date in utc2_dates]
 
         return tokens
 
@@ -62,7 +63,7 @@ class User(models.Model):
 class IPRange(models.Model):
     ip_from = models.IPAddressField()
     ip_to = models.IPAddressField(blank=True, null=True)
-    hash_key = models.ForeignKey(User, db_index=True, related_name='ips_allowed')
+    hash_key = models.ForeignKey(HashKey, db_index=True, related_name='ips_allowed')
 
     @staticmethod
     def _ipv4_to_int(ip):

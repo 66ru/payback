@@ -13,8 +13,9 @@ def test_view(request):
 
 class AuthenticateTestCase(unittest.TestCase):
     def setUp(self):
-        self.user = User(name='vasya', signature='pupkin')
-        self.user.save()
+        user = User.objects.create_user('test', 'test', password='test')
+        self.user_hash = HashKey(user=user)
+        self.user_hash.save()
         self.client = Client()
 
     def test_authenticate(self):
@@ -27,25 +28,25 @@ class AuthenticateTestCase(unittest.TestCase):
         resp = self.client.get('/gateauth/', params)
         self.assertEqual(resp.content, 'AnonymousUser')
 
-        resp = self.client.get('/gateauth/', {'sign': self.user.signature})
+        resp = self.client.get('/gateauth/', {'sign': self.user_hash.signature})
         self.assertEqual(resp.content, 'AnonymousUser')
 
-        resp = self.client.get('/gateauth/', {'sign': self.user.signature, 'token': 'ololo'})
+        resp = self.client.get('/gateauth/', {'sign': self.user_hash.signature, 'token': 'ololo'})
         self.assertEqual(resp.content, 'AnonymousUser')
 
         fromtimestamp = datetime.fromtimestamp
         timestamp = time.time()
-        date = User.date2utc2str(fromtimestamp(timestamp))
+        date = HashKey.date2utc2str(fromtimestamp(timestamp))
 
-        data = {'sign': self.user.signature}
-        data['token'] = User.get_token({}, self.user.signature, date)
+        data = {'sign': self.user_hash.signature}
+        data['token'] = HashKey.get_token({}, self.user_hash.signature, date)
         resp = self.client.get('/gateauth/', data)
-        self.assertEqual(resp.content, self.user.name)
+        self.assertEqual(resp.content, self.user_hash.user.username)
 
-        data['token'] = User.get_token(params, self.user.signature, date)
+        data['token'] = HashKey.get_token(params, self.user_hash.signature, date)
         data.update(params)
         resp = self.client.get('/gateauth/', data)
-        self.assertEqual(resp.content, self.user.name)
+        self.assertEqual(resp.content, self.user_hash.user.username)
 
         data['signature'] = 'ololo'
         resp = self.client.get('/gateauth/', data)
