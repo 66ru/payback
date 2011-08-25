@@ -17,8 +17,9 @@ def randstring_creator(count):
 
 
 class HashKey(models.Model):
-    user = models.OneToOneField(User, max_length=20, verbose_name=u'Пользователь', unique=True)
-    signature = models.CharField(max_length=20, unique=True, default=randstring_creator(20))
+    user = models.OneToOneField(User)
+    code = models.SlugField(unique=True)
+    key = models.CharField(max_length=20, unique=True, default=randstring_creator(20))
 
     @staticmethod
     def date2utc2str(date):
@@ -39,9 +40,6 @@ class HashKey(models.Model):
 
     @staticmethod
     def tokens_range(start, stop, params, salt):
-
-
-
         if not isinstance(start, int) \
             or not isinstance(stop, int) \
             or not isinstance(params, dict) \
@@ -58,4 +56,4 @@ class HashKey(models.Model):
         return tokens
 
     def __unicode__(self):
-        return u'%s (partner)' % self.name
+        return u'%s (partner)' % self.code

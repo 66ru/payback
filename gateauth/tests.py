@@ -14,7 +14,7 @@ def test_view(request):
 class AuthenticateTestCase(unittest.TestCase):
     def setUp(self):
         user = User.objects.create_user('test', 'test', password='test')
-        self.user_hash = HashKey(user=user)
+        self.user_hash = HashKey(user=user, code='code', key='zzz')
         self.user_hash.save()
         self.client = Client()
 
@@ -28,26 +28,30 @@ class AuthenticateTestCase(unittest.TestCase):
         resp = self.client.get('/gateauth/', params)
         self.assertEqual(resp.content, 'AnonymousUser')
 
-        resp = self.client.get('/gateauth/', {'sign': self.user_hash.signature})
+        resp = self.client.get('/gateauth/', {'code': self.user_hash.code})
         self.assertEqual(resp.content, 'AnonymousUser')
 
-        resp = self.client.get('/gateauth/', {'sign': self.user_hash.signature, 'token': 'ololo'})
+        resp = self.client.get('/gateauth/', {'code': self.user_hash.code, 'token': 'ololo'})
         self.assertEqual(resp.content, 'AnonymousUser')
 
         fromtimestamp = datetime.fromtimestamp
         timestamp = time.time()
         date = HashKey.date2utc2str(fromtimestamp(timestamp))
 
-        data = {'sign': self.user_hash.signature}
-        data['token'] = HashKey.get_token({}, self.user_hash.signature, date)
+        data = {
+            'code': self.user_hash.code,
+            'token': HashKey.get_token({}, self.user_hash.key, date),
+        }
         resp = self.client.get('/gateauth/', data)
         self.assertEqual(resp.content, self.user_hash.user.username)
 
-        data['token'] = HashKey.get_token(params, self.user_hash.signature, date)
+        # with params
+        data['token'] = HashKey.get_token(params, self.user_hash.key, date)
         data.update(params)
         resp = self.client.get('/gateauth/', data)
         self.assertEqual(resp.content, self.user_hash.user.username)
 
-        data['signature'] = 'ololo'
+        # bad code
+        data['code'] = 'ololo'
         resp = self.client.get('/gateauth/', data)
         self.assertEqual(resp.content, 'AnonymousUser')
