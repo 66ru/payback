@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.test.client import Client
+from django.core.urlresolvers import reverse
 from django.utils import unittest
 from models import *
 from datetime import datetime
@@ -22,16 +23,17 @@ class AuthenticateTestCase(unittest.TestCase):
 
         params = {'a': 1, 'b': 2}
 
-        resp = self.client.get('/gateauth/')
+        test_view_url = reverse('test_view')
+        resp = self.client.get(test_view_url)
         self.assertEqual(resp.content, 'AnonymousUser')
 
-        resp = self.client.get('/gateauth/', params)
+        resp = self.client.get(test_view_url, params)
         self.assertEqual(resp.content, 'AnonymousUser')
 
-        resp = self.client.get('/gateauth/', {'code': self.user_hash.code})
+        resp = self.client.get(test_view_url, {'code': self.user_hash.code})
         self.assertEqual(resp.content, 'AnonymousUser')
 
-        resp = self.client.get('/gateauth/', {'code': self.user_hash.code, 'token': 'ololo'})
+        resp = self.client.get(test_view_url, {'code': self.user_hash.code, 'token': 'ololo'})
         self.assertEqual(resp.content, 'AnonymousUser')
 
         fromtimestamp = datetime.fromtimestamp
@@ -42,16 +44,16 @@ class AuthenticateTestCase(unittest.TestCase):
             'code': self.user_hash.code,
             'token': HashKey.get_token({}, self.user_hash.key, date),
         }
-        resp = self.client.get('/gateauth/', data)
+        resp = self.client.get(test_view_url, data)
         self.assertEqual(resp.content, self.user_hash.user.username)
 
         # with params
         data['token'] = HashKey.get_token(params, self.user_hash.key, date)
         data.update(params)
-        resp = self.client.get('/gateauth/', data)
+        resp = self.client.get(test_view_url, data)
         self.assertEqual(resp.content, self.user_hash.user.username)
 
         # bad code
         data['code'] = 'ololo'
-        resp = self.client.get('/gateauth/', data)
+        resp = self.client.get(test_view_url, data)
         self.assertEqual(resp.content, 'AnonymousUser')
