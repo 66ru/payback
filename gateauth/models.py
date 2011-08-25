@@ -59,24 +59,3 @@ class HashKey(models.Model):
 
     def __unicode__(self):
         return u'%s (partner)' % self.name
-
-class IPRange(models.Model):
-    ip_from = models.IPAddressField()
-    ip_to = models.IPAddressField(blank=True, null=True)
-<<<<<<< HEAD
-    hash_key = models.ForeignKey(HashKey, db_index=True, related_name='ips_allowed')
-=======
-    user = models.ForeignKey(User, db_index=True, related_name='ips_allowed')
->>>>>>> ea3426dd617b050d74ce6818d4566382d50c2f47
-
-    @staticmethod
-    def _ipv4_to_int(ip):
-        hexn = ''.join(["%02X" % long(i) for i in ip.split('.')])
-        return long(hexn, 16)
-
-    def in_range(self, ip_str):
-        if self.ip_to:
-            return IPRange._ipv4_to_int(self.ip_from) <= IPRange._ipv4_to_int(ip_str) <= IPRange._ipv4_to_int(
-                self.ip_to)
-
-        return ip_str == self.ip_from
