@@ -26,7 +26,7 @@ class HashKey(models.Model):
         return u''.join((unicode(date.year), unicode(date.month), unicode(date.day), unicode(date.hour)))
 
     @staticmethod
-    def get_token(params, salt, date=u''):
+    def sign(params, salt, date=u''):
         items = sorted(params.iteritems())
         hash = u'&'.join([u'='.join((unicode(k), unicode(v))) for k, v in items])
         date = date or HashKey.date2utc2str(datetime.now())
@@ -39,7 +39,7 @@ class HashKey(models.Model):
         return unicode(hash)
 
     @staticmethod
-    def tokens_range(start, stop, params, salt):
+    def signs_range(start, stop, params, salt):
         if not isinstance(start, int) \
             or not isinstance(stop, int) \
             or not isinstance(params, dict) \
@@ -51,7 +51,7 @@ class HashKey(models.Model):
         timestamp = time.time()
 
         utc2_dates = [HashKey.date2utc2str(fromtimestamp(timestamp + 3600*i))  for i in xrange(start, stop+1)]
-        tokens = [HashKey.get_token(params, salt, date) for date in utc2_dates]
+        tokens = [HashKey.sign(params, salt, date) for date in utc2_dates]
 
         return tokens
 

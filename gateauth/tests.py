@@ -33,7 +33,7 @@ class AuthenticateTestCase(unittest.TestCase):
         resp = self.client.get(test_view_url, {'code': self.user_hash.code})
         self.assertEqual(resp.content, 'AnonymousUser')
 
-        resp = self.client.get(test_view_url, {'code': self.user_hash.code, 'token': 'ololo'})
+        resp = self.client.get(test_view_url, {'code': self.user_hash.code, 'sign': 'ololo'})
         self.assertEqual(resp.content, 'AnonymousUser')
 
         fromtimestamp = datetime.fromtimestamp
@@ -42,13 +42,13 @@ class AuthenticateTestCase(unittest.TestCase):
 
         data = {
             'code': self.user_hash.code,
-            'token': HashKey.get_token({}, self.user_hash.key, date),
+            'sign': HashKey.sign({}, self.user_hash.key, date),
         }
         resp = self.client.get(test_view_url, data)
         self.assertEqual(resp.content, self.user_hash.user.username)
 
         # with params
-        data['token'] = HashKey.get_token(params, self.user_hash.key, date)
+        data['sign'] = HashKey.sign(params, self.user_hash.key, date)
         data.update(params)
         resp = self.client.get(test_view_url, data)
         self.assertEqual(resp.content, self.user_hash.user.username)
