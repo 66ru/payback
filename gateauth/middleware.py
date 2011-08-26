@@ -19,7 +19,7 @@ class PartnerPostTokenMiddleware(object):
             return
 
         try:
-            tokens = HashKey.signs_range(-1, 1, params, user_hashkey.key)
+            tokens = HashKey.signs_range(params, user_hashkey.key)
         except TypeError:
             return
 

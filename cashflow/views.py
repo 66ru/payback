@@ -65,7 +65,6 @@ def create_payment(request):
         try:
             module.send_payment(p) # для систем без редиректов нужен будет рефакторинг (например, новый Exception)
         except RedirectNeededException as ex:
-            p.status = Payment.STATUS_SUCCESS
             ret['status'] = 'ok'
             ret['redirect_url'] = ex.get_url()
         except SendPaymentFailureException as ex:

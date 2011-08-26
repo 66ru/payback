@@ -24,7 +24,7 @@ class Client(models.Model):
     backend_settings = models.ManyToManyField(Backend, through='ClientBackend', related_name='bs')
 
     def __unicode__(self):
-        return '%s client' % self.user
+        return '%s (client)' % self.user
 
 
 class ClientBackend(models.Model):
@@ -78,7 +78,7 @@ class Payment(models.Model):
     comment = models.TextField(blank=True)
     success_url = models.URLField(blank=True)
     fail_url = models.URLField(blank=True)
-    status = models.CharField(max_length=1, default=STATUS_IN_PROGRESS)
+    status = models.CharField(max_length=1, default=STATUS_IN_PROGRESS, choices=STATUS_CHOICES)
     status_message = models.TextField(blank=True)
 
     def get_module(self, fromlist=['*']):
@@ -107,4 +107,4 @@ class Payment(models.Model):
 
 
     def __unicode__(self):
-        return '%s %s' % (self.amount, self.currency,)
+        return '%s: %s %s' % (self.client, self.amount, self.currency.code,)

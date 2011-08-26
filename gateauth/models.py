@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 import string
 import random
 import hashlib
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 
 def randstring_creator(count):
@@ -22,38 +22,31 @@ class HashKey(models.Model):
     key = models.CharField(max_length=20, unique=True, default=randstring_creator(20))
 
     @staticmethod
-    def date2utc2str(date):
-        return u''.join((unicode(date.year), unicode(date.month), unicode(date.day), unicode(date.hour)))
+    def datetime2str(dt):
+        return '%s%s%s%s' % (dt.year, dt.month, dt.day, dt.hour,)
 
     @staticmethod
     def sign(params, salt, date=None):
         items = sorted(params.iteritems())
         hash = u'&'.join([u'='.join((unicode(k), unicode(v))) for k, v in items])
-        date = date or HashKey.date2utc2str(datetime.now())
+        date = date or HashKey.datetime2str(datetime.utcnow())
 
         #прибаляем дату в формате UTC2 и применяем sha1
-        hash = hashlib.sha1(u''.join((hash, date))).hexdigest()
+        s1 = u''.join((hash, date))
+        hash = hashlib.sha1(s1).hexdigest()
         #добавляем ключ и применяем sha1
         hash = hashlib.sha1(u''.join((hash, salt))).hexdigest()
 
         return unicode(hash)
 
     @staticmethod
-    def signs_range(start, stop, params, salt):
-        if not isinstance(start, int) \
-            or not isinstance(stop, int) \
-            or not isinstance(params, dict) \
+    def signs_range(params, salt):
+        if not isinstance(params, dict) \
             or not isinstance(salt, basestring):
-
             raise TypeError
 
-        fromtimestamp = datetime.fromtimestamp
-        timestamp = time.time()
-
-        utc2_dates = [HashKey.date2utc2str(fromtimestamp(timestamp + 3600*i))  for i in xrange(start, stop+1)]
-        tokens = [HashKey.sign(params, salt, date) for date in utc2_dates]
-
-        return tokens
+        utc_dates = [HashKey.datetime2str(datetime.utcnow() + timedelta(hours=a)) for a in xrange(-1, 2)]
+        return [HashKey.sign(params, salt, dt) for dt in utc_dates]
 
     def __unicode__(self):
         return u'%s (partner)' % self.code

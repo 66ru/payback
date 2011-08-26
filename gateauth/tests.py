@@ -36,9 +36,7 @@ class AuthenticateTestCase(unittest.TestCase):
         resp = self.client.get(test_view_url, {'code': self.user_hash.code, 'sign': 'ololo'})
         self.assertEqual(resp.content, 'AnonymousUser')
 
-        fromtimestamp = datetime.fromtimestamp
-        timestamp = time.time()
-        date = HashKey.date2utc2str(fromtimestamp(timestamp))
+        date = HashKey.datetime2str(datetime.utcnow())
 
         data = {
             'code': self.user_hash.code,
