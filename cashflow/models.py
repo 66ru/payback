@@ -23,6 +23,9 @@ class Client(models.Model):
     user = models.OneToOneField(User)
     backend_settings = models.ManyToManyField(Backend, through='ClientBackend', related_name='bs')
 
+    def __unicode__(self):
+        return '%s client' % self.user
+
 
 class ClientBackend(models.Model):
     client = models.ForeignKey(Client)
@@ -34,6 +37,9 @@ class ClientBackend(models.Model):
         conf_parser = ConfigParser.RawConfigParser()
         conf_parser.readfp(io.BytesIO(str(self.settings)))
         return conf_parser
+
+    def __unicode__(self):
+        return '%s: %s' % (self.client, self.backend,)
 
     class Meta:
         unique_together = ('client', 'backend',)

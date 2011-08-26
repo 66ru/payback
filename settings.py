@@ -96,4 +96,5 @@ INSTALLED_APPS = (
 
 PAYMENT_BACKENDS_ENABLED = (
     'cashflow.backends.test_backend',
+    'cashflow.backends.robokassa_backend',
 )
