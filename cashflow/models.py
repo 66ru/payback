@@ -23,6 +23,9 @@ class Client(models.Model):
     user = models.OneToOneField(User)
     backend_settings = models.ManyToManyField(Backend, through='ClientBackend', related_name='bs')
 
+    def __unicode__(self):
+        return '%s client' % self.user
+
 
 class ClientBackend(models.Model):
     client = models.ForeignKey(Client)
