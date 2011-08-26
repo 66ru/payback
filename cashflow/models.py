@@ -38,6 +38,9 @@ class ClientBackend(models.Model):
         conf_parser.readfp(io.BytesIO(str(self.settings)))
         return conf_parser
 
+    def __unicode__(self):
+        return '%s: %s' % (self.client, self.backend,)
+
     class Meta:
         unique_together = ('client', 'backend',)
     
