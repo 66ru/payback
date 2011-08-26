@@ -26,7 +26,7 @@ class HashKey(models.Model):
         return u''.join((unicode(date.year), unicode(date.month), unicode(date.day), unicode(date.hour)))
 
     @staticmethod
-    def sign(params, salt, date=u''):
+    def sign(params, salt, date=None):
         items = sorted(params.iteritems())
         hash = u'&'.join([u'='.join((unicode(k), unicode(v))) for k, v in items])
         date = date or HashKey.date2utc2str(datetime.now())
