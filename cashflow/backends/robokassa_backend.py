@@ -48,7 +48,7 @@ class FormOkException(BaseException):
         super(FormOkException, self).__init__(*args, **kwargs)
         self.payment = payment
 
-def do_my_thang_wid_dat_req(request):
+def _success_fail_helper(request):
     form = ResultForm(request.POST)
     if form.is_valid():
         payment_id = form.cleaned_data['InvId']
@@ -74,7 +74,7 @@ def do_my_thang_wid_dat_req(request):
 
 def success(request):
     try:
-        return do_my_thang_wid_dat_req(request)
+        return _success_fail_helper(request)
     except FormOkException as ex:
         payment = ex.payment
         payment.status = Payment.STATUS_SUCCESS
@@ -87,7 +87,7 @@ def success(request):
 
 def fail(request):
     try:
-        return do_my_thang_wid_dat_req(request)
+        return _success_fail_helper(request)
     except FormOkException as ex:
         payment = ex.payment
         payment.status = Payment.STATUS_FAILED
