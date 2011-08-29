@@ -38,13 +38,18 @@ def send_payment(payment): # throws SendPaymentFailureException
     raise RedirectNeededException(url, '(send payment): %s' % url)
 
 
-class SuccessForm(forms.Form):
+class ResultForm(forms.Form):
     OutSum = forms.DecimalField(min_value=0)
     InvId = forms.IntegerField(min_value=1)
     SignatureValue = forms.CharField(max_length=32)
 
-def success(request):
-    form = SuccessForm(request.POST)
+class SwagaNiggaException(BaseException):
+    def __init__(self, payment, *args, **kwargs):
+        super(SwagaNiggaException, self).__init__(*args, **kwargs)
+        self.payment = payment
+
+def do_my_thang_wid_dat_req(request):
+    form = ResultForm(request.POST)
     if form.is_valid():
         payment_id = form.cleaned_data['InvId']
         try:
@@ -63,17 +68,32 @@ def success(request):
         my_checksum = sign(summ, payment_id, mrh_pass2)
 
         if outer_checksum == my_checksum:
-            p.status = Payment.STATUS_SUCCESS
-            p.save()
-
-            url = p.success_url
-            if url:
-                return HttpResponseRedirect(url)
-            else:
-                return HttpResponse('payment successful', status=200)
+            raise SwagaNiggaException(payment=p)
 
     return HttpResponse('invalid form', status=400)
 
+def success(request):
+    try:
+        return do_my_thang_wid_dat_req(request)
+    except SwagaNiggaException as ex:
+        payment = ex.payment
+        payment.status = Payment.STATUS_SUCCESS
+        payment.save()
+        url = payment.success_url
+        if url:
+            return HttpResponseRedirect(url)
+        else:
+            return HttpResponse('payment successful', status=200)
 
-def fail(_):
-    return HttpResponse('so?', status=200)
+def fail(request):
+    try:
+        return do_my_thang_wid_dat_req(request)
+    except SwagaNiggaException as ex:
+        payment = ex.payment
+        payment.status = Payment.STATUS_FAILED
+        payment.save()
+        url = payment.fail_url
+        if url:
+            return HttpResponseRedirect(url)
+        else:
+            return HttpResponse('payment failed', status=200) # TODO: status?
