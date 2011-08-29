@@ -43,9 +43,9 @@ class ResultForm(forms.Form):
     InvId = forms.IntegerField(min_value=1)
     SignatureValue = forms.CharField(max_length=32)
 
-class SwagaNiggaException(BaseException):
+class FormOkException(BaseException):
     def __init__(self, payment, *args, **kwargs):
-        super(SwagaNiggaException, self).__init__(*args, **kwargs)
+        super(FormOkException, self).__init__(*args, **kwargs)
         self.payment = payment
 
 def do_my_thang_wid_dat_req(request):
@@ -68,14 +68,14 @@ def do_my_thang_wid_dat_req(request):
         my_checksum = sign(summ, payment_id, mrh_pass2)
 
         if outer_checksum == my_checksum:
-            raise SwagaNiggaException(payment=p)
+            raise FormOkException(payment=p)
 
     return HttpResponse('invalid form', status=400)
 
 def success(request):
     try:
         return do_my_thang_wid_dat_req(request)
-    except SwagaNiggaException as ex:
+    except FormOkException as ex:
         payment = ex.payment
         payment.status = Payment.STATUS_SUCCESS
         payment.save()
@@ -88,7 +88,7 @@ def success(request):
 def fail(request):
     try:
         return do_my_thang_wid_dat_req(request)
-    except SwagaNiggaException as ex:
+    except FormOkException as ex:
         payment = ex.payment
         payment.status = Payment.STATUS_FAILED
         payment.save()
