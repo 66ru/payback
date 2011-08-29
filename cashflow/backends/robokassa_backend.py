@@ -16,7 +16,7 @@ from cashflow.models import Payment, ClientBackend
 
 
 def sign(summ, inv_id, pwd):
-    return md5(':'.join((str(summ), str(inv_id), pwd,))).hexdigest().upper()
+    return md5('%s:%s:%s' % (summ, inv_id, pwd,)).hexdigest().upper()
 
 def send_payment(payment): # throws SendPaymentFailureException
     client_backend = ClientBackend.objects.get(client=payment.client, backend=payment.backend)
