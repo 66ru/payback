@@ -206,7 +206,7 @@ class CreatePaymentTest(BaseRESTTest):
         self.assertEqual(p.currency, self.yamoney)
         self.assertEqual(p.backend, self.test_backend)
         self.assertEqual(p.client, self.client_user)
-        self.assertEqual(p.status, Payment.STATUS_SUCCESS)
+        self.assertEqual(p.status, Payment.STATUS_IN_PROGRESS)
         self.assertEqual(p.id, result['payment_id'])
 
     def test_create_payment_rest_minimum(self):
