@@ -94,7 +94,7 @@ class RoboTest(BaseRESTTest):
 
         payment_id = self.payment.id
         amount = self.payment.amount
-        signature = robo_sign(amount, payment_id, self.pass2)
+        signature = robo_sign(amount, payment_id, self.pass1)
 
         params = self._create_robo_request_params(payment_id,
                                                   amount,
@@ -108,7 +108,7 @@ class RoboTest(BaseRESTTest):
 
         payment_id = self.payment.id
         amount = self.payment.amount
-        signature = robo_sign(amount, payment_id, self.pass2)
+        signature = robo_sign(amount, payment_id, self.pass1)
 
         params = self._create_robo_request_params(payment_id,
                                                   amount,
