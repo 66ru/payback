@@ -15,8 +15,9 @@ from cashflow.models import Payment, ClientBackend
 #
 
 
-def sign(summ, inv_id, pwd):
-    return md5('%s:%s:%s' % (summ, inv_id, pwd,)).hexdigest().upper()
+def sign(*args):
+    param_str = ":".join([str(a) for a in args])
+    return md5(param_str).hexdigest()
 
 def send_payment(payment): # throws SendPaymentFailureException
     client_backend = ClientBackend.objects.get(client=payment.client, backend=payment.backend)
@@ -25,16 +26,14 @@ def send_payment(payment): # throws SendPaymentFailureException
     login = cp.get('auth', 'login')
     pwd = cp.get('auth', 'pass1')
 
-    url = "https://merchant.roboxchange.com/Index.aspx" + \
-          "?MrchLogin=%(login)s&OutSum=%(summ)s&" + \
-          "InvId=%(inv_id)s&Desc=%(comment)s&" + \
-          "SignatureValue=%(signature)s" % {
-              'login': login,
-              'summ' : payment.amount,
-              'inv_id' : payment.id,
-              'comment': payment.comment,
-              'signature': sign(payment.amount, payment.id, pwd),
-          }
+    #url = "https://merchant.roboxchange.com/Index.aspx" + \
+    url = "http://test.robokassa.ru/Index.aspx" + \
+          ("?MrchLogin=%s" % login) + \
+          ("&OutSum=%s" % payment.amount) + \
+          ("&InvId=%s" % payment.id) + \
+          ("&Desc=%s" % payment.comment) + \
+          ("&SignatureValue=%s" % sign(login, payment.amount, payment.id, pwd))
+
     raise RedirectNeededException(url, '(send payment): %s' % url)
 
 
@@ -48,7 +47,7 @@ class FormOkException(BaseException):
         super(FormOkException, self).__init__(*args, **kwargs)
         self.payment = payment
 
-def _success_fail_helper(request):
+def _success_fail_request_helper(request):
     form = ResultForm(request.POST)
     if form.is_valid():
         payment_id = form.cleaned_data['InvId']
@@ -61,11 +60,11 @@ def _success_fail_helper(request):
         client_backend = ClientBackend.objects.get(client=p.client, backend=p.backend)
         cp = client_backend.get_config_parser()
 
-        mrh_pass2 = cp.get('auth', 'pass2')
+        mrh_pass2 = cp.get('auth', 'pass1')
 
         summ = form.cleaned_data['OutSum']
         outer_checksum = form.cleaned_data['SignatureValue'].upper()
-        my_checksum = sign(summ, payment_id, mrh_pass2)
+        my_checksum = sign(summ, payment_id, mrh_pass2).upper()
 
         if outer_checksum == my_checksum:
             raise FormOkException(payment=p)
@@ -74,7 +73,7 @@ def _success_fail_helper(request):
 
 def success(request):
     try:
-        return _success_fail_helper(request)
+        return _success_fail_request_helper(request)
     except FormOkException as ex:
         payment = ex.payment
         payment.status = Payment.STATUS_SUCCESS
@@ -87,7 +86,7 @@ def success(request):
 
 def fail(request):
     try:
-        return _success_fail_helper(request)
+        return _success_fail_request_helper(request)
     except FormOkException as ex:
         payment = ex.payment
         payment.status = Payment.STATUS_FAILED
