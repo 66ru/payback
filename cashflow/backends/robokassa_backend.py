@@ -1,5 +1,6 @@
 #-*- coding: UTF-8 -*-
 from hashlib import md5
+from ConfigParser import NoOptionError, NoSectionError
 from django import forms
 from django.http import HttpResponse, HttpResponseRedirect
 from cashflow.backends.common import RedirectNeededException
@@ -13,6 +14,8 @@ from cashflow.models import Payment, ClientBackend
 # pass1 = someting1
 # pass2 = someting2
 #
+# [dev]
+# debug = true # необязательно
 
 
 def sign(*args):
@@ -26,8 +29,19 @@ def send_payment(payment): # throws SendPaymentFailureException
     login = cp.get('auth', 'login')
     pwd = cp.get('auth', 'pass1')
 
-    #url = "https://merchant.roboxchange.com/Index.aspx" + \
-    url = "http://test.robokassa.ru/Index.aspx" + \
+    debug = False
+    try:
+        debug = cp.getboolean('dev', 'debug')
+    except (NoOptionError, NoSectionError):
+        pass
+
+
+    if not debug:
+        url = "https://merchant.roboxchange.com/Index.aspx"
+    else:
+        url = "http://test.robokassa.ru/Index.aspx"
+
+    url += \
           ("?MrchLogin=%s" % login) + \
           ("&OutSum=%s" % payment.amount) + \
           ("&InvId=%s" % payment.id) + \
