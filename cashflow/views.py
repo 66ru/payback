@@ -5,8 +5,8 @@ from django.http import HttpResponse
 from django.utils.decorators import available_attrs
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from cashflow.backends.common import SendPaymentFailureException, RedirectNeededException
-from cashflow.forms import PaymentForm
+from payback.cashflow.backends.common import SendPaymentFailureException, RedirectNeededException
+from payback.cashflow.forms import PaymentForm
 from models import *
 
 def response_json(some_obj):

@@ -2,6 +2,6 @@
 
 from django.conf.urls.defaults import *
 
-urlpatterns = patterns('gateauth.tests',
+urlpatterns = patterns('payback.gateauth.tests',
     url(r'^$', 'test_view', name='test_view'),
 )
