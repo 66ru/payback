@@ -74,11 +74,11 @@ def _success_fail_request_helper(request):
         client_backend = ClientBackend.objects.get(client=p.client, backend=p.backend)
         cp = client_backend.get_config_parser()
 
-        mrh_pass2 = cp.get('auth', 'pass1')
+        mrh_pass1 = cp.get('auth', 'pass1')
 
         summ = form.cleaned_data['OutSum']
         outer_checksum = form.cleaned_data['SignatureValue'].upper()
-        my_checksum = sign(summ, payment_id, mrh_pass2).upper()
+        my_checksum = sign(summ, payment_id, mrh_pass1).upper()
 
         if outer_checksum == my_checksum:
             raise FormOkException(payment=p)
