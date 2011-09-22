@@ -237,6 +237,7 @@ class CreatePaymentTest(BaseRESTTest):
         req = self.post(params)
         result = json.loads(req.content)
         self.assertEqual(result['status'], 'invalid form')
+        self.assertTrue('form_errors' in result)
 
     def test_create_payment_rest_silly_cur(self):
         self.login()

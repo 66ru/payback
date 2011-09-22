@@ -77,7 +77,11 @@ def create_payment(request):
 
         return response_json(ret)
 
-    return response_json({'status': 'invalid form', 'data': form.data})
+    return response_json({
+        'status': 'invalid form',
+        'form_errors': form.errors,
+        'data': form.data,
+    })
 
 
 @login_required_403
