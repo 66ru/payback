@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 from django.conf.urls.defaults import *
 
-urlpatterns = patterns('payback.cashflow.views',
+urlpatterns = patterns('cashflow.views',
     url(r'currencies/$', 'currs_list', name='currs_list'),
     url(r'payments/add/', 'create_payment', name='create_payment'),
     url(r'payments/(?P<id>\d+)/$', 'status', name='payment_status'),

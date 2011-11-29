@@ -1,5 +1,5 @@
 #-*- coding: UTF-8 -*-
-from payback.cashflow.backends.common import RedirectNeededException
+from cashflow.backends.common import RedirectNeededException
 
 def send_payment(payment):
     raise RedirectNeededException('http://example.com/', message='wow!')

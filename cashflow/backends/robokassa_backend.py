@@ -3,8 +3,8 @@ from hashlib import md5
 from ConfigParser import NoOptionError, NoSectionError
 from django import forms
 from django.http import HttpResponse, HttpResponseRedirect
-from payback.cashflow.backends.common import RedirectNeededException
-from payback.cashflow.models import Payment, ClientBackend
+from cashflow.backends.common import RedirectNeededException
+from cashflow.models import Payment, ClientBackend
 
 ###
 # config:

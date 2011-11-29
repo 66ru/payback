@@ -1,4 +1,4 @@
-from payback.gateauth.models import HashKey
+from gateauth.models import HashKey
 from django.contrib import admin
 
 admin.site.register(HashKey)

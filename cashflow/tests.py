@@ -5,9 +5,9 @@ from django.core.urlresolvers import reverse
 
 from django.test import TestCase
 from django.test.client import Client as InternetClient
-from payback.cashflow.backends.common import RedirectNeededException
-from payback.cashflow.backends.robokassa_backend import sign as robo_sign, send_payment as robo_send_payment
-from payback.cashflow.models import *
+from cashflow.backends.common import RedirectNeededException
+from cashflow.backends.robokassa_backend import sign as robo_sign, send_payment as robo_send_payment
+from cashflow.models import *
 
 class BaseRESTTest(TestCase):
     def setUp(self):
