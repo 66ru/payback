@@ -76,8 +76,8 @@ class Payment(models.Model):
     backend = models.ForeignKey(Backend)
     created = models.DateTimeField(auto_now_add=True)
     comment = models.TextField(blank=True)
-    success_url = models.URLField(blank=True)
-    fail_url = models.URLField(blank=True)
+    success_url = models.URLField(blank=True, verify_exists=False)
+    fail_url = models.URLField(blank=True, verify_exists=False)
     status = models.CharField(max_length=1, default=STATUS_IN_PROGRESS, choices=STATUS_CHOICES)
     status_message = models.TextField(blank=True)
 
