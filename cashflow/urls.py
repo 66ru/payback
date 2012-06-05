@@ -8,3 +8,8 @@ urlpatterns = patterns('cashflow.views',
     url(r'payments/(?P<backend_slug>\w+)/success/$', 'success', name='payment_success'),
     url(r'payments/(?P<backend_slug>\w+)/fail/$', 'fail', name='payment_fail'),
 )
+
+#ya_money auth
+urlpatterns += patterns('cashflow.backends.yandex_money_backend',
+    url(r'payments/ya_auth/(?P<id>\d+)/$', 'ya_money_auth_payment', name='ya_money_auth_payment'),
+)
