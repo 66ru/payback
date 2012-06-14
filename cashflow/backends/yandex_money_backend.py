@@ -22,6 +22,9 @@ class ChangeToPermanentTokenException(Exception):
 
 def _get_url_yandex_money_auth(api_key, redirect_uri, payment):
     url = 'https://sp-money.yandex.ru/oauth/authorize'
+    comment = payment.comment
+    if isinstance(comment, unicode):
+        comment = comment.encode('utf8')
     data = {
         'client_id': api_key,
         'response_type': 'code',
@@ -29,14 +32,12 @@ def _get_url_yandex_money_auth(api_key, redirect_uri, payment):
         'scope': 'shopping-cart(%s,,"643",%s).to-pattern("123").item(%s)' % (
             payment.amount,
             payment.id,
-            payment.comment
+            comment
         )
-#        'scope': 'payment.to-pattern("%s").limit(, %s)' % (payment.comment, payment.amount), #authorize request to payment
+#        'scope': 'payment.to-pattern("%s").limit(, %s)' % (comment, payment.amount), #authorize request to payment
         }
 
-    if not url.endswith('/'):
-        url += '/'
-    url += '%s/' % payment.id + '?' + urllib.urlencode(data)
+    url += '?' + urllib.urlencode(data)
     return url
 
 def _get_permanent_token_auth(request, code, api_key):
@@ -140,6 +141,10 @@ def send_payment(payment):
 
     api_key = cp.get('yandex_money', 'key')
     redirect_uri = cp.get('yandex_money', 'redirect_uri')
+    if redirect_uri:
+        if not redirect_uri.endswith('/'):
+            redirect_uri += '/'
+        redirect_uri += 'ya_auth/%s/' % payment.id
     url = _get_url_yandex_money_auth(api_key, redirect_uri, payment)
 
     raise RedirectNeededException(url, '(yandex money auth): %s' % url)

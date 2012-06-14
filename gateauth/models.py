@@ -33,7 +33,7 @@ class HashKey(models.Model):
 
         #прибаляем дату в формате UTC2 и применяем sha1
         s1 = u''.join((hash, date))
-        hash = hashlib.sha1(s1).hexdigest()
+        hash = hashlib.sha1(s1.encode('utf8')).hexdigest()
         #добавляем ключ и применяем sha1
         hash = hashlib.sha1(u''.join((hash, salt))).hexdigest()
 
