@@ -18,4 +18,5 @@ urlpatterns = patterns('',
     (r'^admin/', include(admin.site.urls)),
     (r'^c/', include(cashflow.urls)),
     (r'^gateauth/', include(gateauth.urls)),
+    (r'^mobi_money_service/', 'cashflow.backends.mobi_money_backend.mobi_money_service'),
 )
