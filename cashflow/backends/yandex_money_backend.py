@@ -144,7 +144,7 @@ def send_payment(payment):
     if redirect_uri:
         if not redirect_uri.endswith('/'):
             redirect_uri += '/'
-        redirect_uri += 'ya_auth/%s/' % payment.id
+        redirect_uri += 'ya_auth/?p=%s' % payment.id
     url = _get_url_yandex_money_auth(api_key, redirect_uri, payment)
 
     raise RedirectNeededException(url, '(yandex money auth): %s' % url)
