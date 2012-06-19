@@ -29,12 +29,12 @@ def _get_url_yandex_money_auth(api_key, redirect_uri, payment):
         'client_id': api_key,
         'response_type': 'code',
         'redirect_uri': redirect_uri,
-        'scope': 'shopping-cart(%s,,"643",%s).to-pattern("123").item(%s)' % (
-            payment.amount,
-            payment.id,
-            comment
-        )
-#        'scope': 'payment.to-pattern("%s").limit(, %s)' % (comment, payment.amount), #authorize request to payment
+#        'scope': 'shopping-cart(%s,,"643",%s).to-pattern("123").item("%s")' % (
+#            payment.amount,
+#            payment.id,
+#            comment
+#        )
+        'scope': 'payment.to-pattern("%s").limit(, %s)' % (comment, payment.amount), #authorize request to payment
         }
 
     url += '?' + urllib.urlencode(data)
