@@ -2,6 +2,7 @@
 import urllib, urllib2
 import json
 import time
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseRedirect
 from common import CashflowBaseException
 from cashflow.backends.common import RedirectNeededException
@@ -54,24 +55,22 @@ def _get_permanent_token_auth(request, code, api_key, redirect_uri):
     return resp.get('access_token')
 
 def _payment_proceed(payment, access_token):
-    while payment.status == Payment.STATUS_IN_PROGRESS:
-        url = 'https://money.yandex.ru/api/process-payment'
-        data = {'request_id': payment.status_message}
-        rq = urllib2.Request(url)
-        rq.add_header('Authorization', 'Bearer ' + access_token)
+    url = 'https://money.yandex.ru/api/process-payment'
+    data = {'request_id': payment.status_message}
+    rq = urllib2.Request(url)
+    rq.add_header('Authorization', 'Bearer ' + access_token)
 
-        fs = urllib2.urlopen(rq, urllib.urlencode(data))
-        resp = json.load(fs)
+    fs = urllib2.urlopen(rq, urllib.urlencode(data))
+    resp = json.load(fs)
 
-        status = resp.get('status')
-        if status == 'success':
-            payment.status = Payment.STATUS_SUCCESS
-            payment.status_message = 'payment_id: %s' % resp.get('payment_id')
-        elif status == 'refused':
-            payment.status = Payment.STATUS_FAILED
-            payment.status_message = resp.get('error')
-        else:
-            time.sleep(1)
+    status = resp.get('status')
+    if status == 'success':
+        payment.status = Payment.STATUS_SUCCESS
+    elif status == 'refused':
+        payment.status = Payment.STATUS_FAILED
+        payment.status_message = resp.get('error')
+    else:
+        time.sleep(3)
 
     return payment
 
@@ -121,7 +120,7 @@ def ya_money_auth_payment(request):
             if req_payment_status == 'success':
                 payment.status = Payment.STATUS_IN_PROGRESS
                 payment.status_message = resp.get('request_id')
-#                payment = _payment_proceed(payment, access_token)
+                payment = _payment_proceed(payment, access_token)
             else:
                 payment.status = Payment.STATUS_FAILED
                 payment.status_message = resp.get('error_description')
@@ -158,6 +157,14 @@ def send_payment(payment):
 
 
 def success(request):
+    operation_id = request.POST.get('operation_id')
+    if operation_id is not None:
+        try:
+            p = Payment.objects.get(status_message=operation_id)
+            p.status = Payment.STATUS_SUCCESS
+            p.save()
+        except ObjectDoesNotExist:
+            return HttpResponse('payment failed', status=200)
     return HttpResponse('payment successful', status=200)
 
 def fail(request):
