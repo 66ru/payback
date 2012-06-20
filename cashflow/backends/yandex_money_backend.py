@@ -121,7 +121,7 @@ def ya_money_auth_payment(request):
             if req_payment_status == 'success':
                 payment.status = Payment.STATUS_IN_PROGRESS
                 payment.status_message = resp.get('request_id')
-                payment = _payment_proceed(payment, access_token)
+#                payment = _payment_proceed(payment, access_token)
             else:
                 payment.status = Payment.STATUS_FAILED
                 payment.status_message = resp.get('error_description')
@@ -158,7 +158,7 @@ def send_payment(payment):
 
 
 def success(request):
-    return True
+    return HttpResponse('payment successful', status=200)
 
 def fail(request):
-    return True
+    return HttpResponse('payment failed', status=200)
