@@ -3,6 +3,7 @@ import urllib, urllib2
 import json
 import time
 from django.http import HttpResponse, HttpResponseRedirect
+from common import CashflowBaseException
 from cashflow.backends.common import RedirectNeededException
 from cashflow.models import Payment, ClientBackend
 from cashflow.views import login_required_403
@@ -19,14 +20,12 @@ from cashflow.views import login_required_403
 # 31B48E2D251B3DD402339B95EEB5D0DA8C4B566BB271DD9641060900E48ED415 my code
 # http://payback.gpor.ru/ my redirect uri
 
-class ChangeToPermanentTokenException(Exception):
+class ChangeToPermanentTokenException(CashflowBaseException):
     pass
 
 def _get_url_yandex_money_auth(ya_account, api_key, redirect_uri, payment):
     url = 'https://sp-money.yandex.ru/oauth/authorize'
-    comment = payment.comment
-    if isinstance(comment, unicode):
-        comment = comment.encode('utf8')
+
     data = {
         'client_id': api_key,
         'response_type': 'code',
@@ -96,7 +95,7 @@ def ya_money_auth_payment(request):
             access_token = _get_permanent_token_auth(request, code, api_key)
         except ChangeToPermanentTokenException, ex:
             payment.status = Payment.STATUS_FAILED
-            payment.status_message = ex.message
+            payment.status_message = ex.get_message()
         #requesting payment
         else:
             rq = urllib2.Request('https://money.yandex.ru/api/request-payment')
