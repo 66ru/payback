@@ -136,9 +136,9 @@ def ya_money_auth_payment(request):
         subj = 'payment failed'
 
     if redirect_url:
-        HttpResponseRedirect(redirect_url)
+        return HttpResponseRedirect(redirect_url)
     else:
-        HttpResponse(subj, 200)
+        return HttpResponse(subj, 200)
 
 
 def send_payment(payment):
