@@ -36,16 +36,16 @@ def _get_url_yandex_money_auth(ya_account, api_key, redirect_uri, payment):
     url += '?' + urllib.urlencode(data)
     return url
 
-def _get_permanent_token_auth(request, code, api_key):
+def _get_permanent_token_auth(request, code, api_key, redirect_uri):
     url = 'https://sp-money.yandex.ru/oauth/token'
     data = {
         'code': code,
         'client_id': api_key,
         'grant_type': 'authorization_code',
-        'redirect_uri': request.META['REQUEST_URI']
+        'redirect_uri': redirect_uri,
     }
 
-    fs = urllib.urlopen(url, urllib.urlencode(data))
+    fs = urllib2.urlopen(url, urllib.urlencode(data))
     resp = json.load(fs)
 
     if resp.get('access_token') is None:
@@ -86,13 +86,14 @@ def ya_money_auth_payment(request):
     cp = client_backend.get_config_parser()
 
     api_key = cp.get('yandex_money', 'key')
+    redirect_uri = cp.get('yandex_money', 'redirect_uri')
 
     if not code:
         payment.status = Payment.STATUS_FAILED
         payment.status_message = error
     else:
         try:
-            access_token = _get_permanent_token_auth(request, code, api_key)
+            access_token = _get_permanent_token_auth(request, code, api_key, redirect_uri)
         except ChangeToPermanentTokenException, ex:
             payment.status = Payment.STATUS_FAILED
             payment.status_message = ex.get_message()
