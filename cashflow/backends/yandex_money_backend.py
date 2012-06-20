@@ -12,15 +12,17 @@ from cashflow.views import login_required_403
 #
 # ...
 # [yandex_money]
-# key = key
+# account = yandex_account_number
+# key = client_id
 # redirect_uri = redirect_uri
+# 41001461963445 my account number
 # 31B48E2D251B3DD402339B95EEB5D0DA8C4B566BB271DD9641060900E48ED415 my code
 # http://payback.gpor.ru/ my redirect uri
 
 class ChangeToPermanentTokenException(Exception):
     pass
 
-def _get_url_yandex_money_auth(api_key, redirect_uri, payment):
+def _get_url_yandex_money_auth(ya_account, api_key, redirect_uri, payment):
     url = 'https://sp-money.yandex.ru/oauth/authorize'
     comment = payment.comment
     if isinstance(comment, unicode):
@@ -34,7 +36,8 @@ def _get_url_yandex_money_auth(api_key, redirect_uri, payment):
 #            payment.id,
 #            comment
 #        )
-        'scope': 'payment.to-pattern("%s").limit(, %s)' % (comment, payment.amount), #authorize request to payment
+#        'scope': 'payment.to-pattern("%s").limit(, %s)' % (comment, payment.amount), #authorize request to payment
+        'scope': 'payment.to-account("%s").limit(, %s)' % (ya_account, payment.amount)
         }
 
     url += '?' + urllib.urlencode(data)
@@ -139,13 +142,14 @@ def send_payment(payment):
     client_backend = ClientBackend.objects.get(client=payment.client, backend=payment.backend)
     cp = client_backend.get_config_parser()
 
+    ya_account = cp.get('yandex_money', 'account')
     api_key = cp.get('yandex_money', 'key')
     redirect_uri = cp.get('yandex_money', 'redirect_uri')
     if redirect_uri:
         if not redirect_uri.endswith('/'):
             redirect_uri += '/'
         redirect_uri += 'ya_auth/?p=%s' % payment.id
-    url = _get_url_yandex_money_auth(api_key, redirect_uri, payment)
+    url = _get_url_yandex_money_auth(ya_account, api_key, redirect_uri, payment)
 
     raise RedirectNeededException(url, '(yandex money auth): %s' % url)
 
