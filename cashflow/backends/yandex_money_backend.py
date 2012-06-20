@@ -31,13 +31,7 @@ def _get_url_yandex_money_auth(ya_account, api_key, redirect_uri, payment):
         'client_id': api_key,
         'response_type': 'code',
         'redirect_uri': redirect_uri,
-#        'scope': 'shopping-cart(%s,,"643",%s).to-pattern("123").item("%s")' % (
-#            payment.amount,
-#            payment.id,
-#            comment
-#        )
-#        'scope': 'payment.to-pattern("%s").limit(, %s)' % (comment, payment.amount), #authorize request to payment
-        'scope': 'payment.to-account("%s").limit(, %s)' % (ya_account, payment.amount)
+        'scope': 'payment.to-account("%s").limit(,%s)' % (ya_account, payment.amount)
         }
 
     url += '?' + urllib.urlencode(data)
@@ -83,13 +77,14 @@ def _payment_proceed(payment, access_token):
     return payment
 
 @login_required_403
-def ya_money_auth_payment(request, id):
+def ya_money_auth_payment(request):
+    id = request.GET.get('id')
+    code = request.GET.get('code')
+    error = request.GET.get('error')
+
     payment = Payment.objects.get(pk=id)
     client_backend = ClientBackend.objects.get(client=payment.client, backend=payment.backend)
     cp = client_backend.get_config_parser()
-
-    code = request.GET.get('code')
-    error = request.GET.get('error')
 
     api_key = cp.get('yandex_money', 'key')
 
