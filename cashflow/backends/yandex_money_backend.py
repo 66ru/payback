@@ -85,8 +85,13 @@ def ya_money_auth_payment(request):
     client_backend = ClientBackend.objects.get(client=payment.client, backend=payment.backend)
     cp = client_backend.get_config_parser()
 
+    ya_account = cp.get('yandex_money', 'account')
     api_key = cp.get('yandex_money', 'key')
     redirect_uri = cp.get('yandex_money', 'redirect_uri')
+
+    comment = payment.comment
+    if isinstance(comment, unicode):
+        payment_comment = comment.encode('utf8')
 
     if not code:
         payment.status = Payment.STATUS_FAILED
@@ -102,8 +107,11 @@ def ya_money_auth_payment(request):
             rq = urllib2.Request('https://money.yandex.ru/api/request-payment')
             rq.add_header('Authorization', 'Bearer ' + access_token)
             data = {
-                'pattern_id': '123',
-                'sum': payment.amount,
+                'pattern_id': 'p2p',
+                'to': ya_account,
+                'amount': payment.amount,
+                'comment': payment_comment,
+                'message': payment_comment,
             }
             fs = urllib2.urlopen(rq, urllib.urlencode(data))
             resp = json.load(fs)
