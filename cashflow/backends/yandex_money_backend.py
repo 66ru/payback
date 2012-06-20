@@ -78,7 +78,7 @@ def _payment_proceed(payment, access_token):
 
 @login_required_403
 def ya_money_auth_payment(request):
-    id = request.GET.get('id')
+    id = request.GET.get('p')
     code = request.GET.get('code')
     error = request.GET.get('error')
 
@@ -143,7 +143,7 @@ def send_payment(payment):
     if redirect_uri:
         if not redirect_uri.endswith('/'):
             redirect_uri += '/'
-        redirect_uri += 'ya_auth/?p=%s' % payment.id
+        redirect_uri += '?p=%s' % payment.id
     url = _get_url_yandex_money_auth(ya_account, api_key, redirect_uri, payment)
 
     raise RedirectNeededException(url, '(yandex money auth): %s' % url)
