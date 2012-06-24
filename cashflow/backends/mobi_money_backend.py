@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from urlparse import parse_qs
-from django.http import HttpResponse
+from django.core.exceptions import ObjectDoesNotExist
 from cashflow.models import Payment
+from rpclib.model.fault import Fault
 from rpclib.server.django import DjangoApplication
 from rpclib.model.primitive import String, Integer, DateTime, Float, Boolean
-from rpclib.model.complex import  ComplexModel
 from rpclib.service import ServiceBase
 from rpclib.interface.wsdl import Wsdl11
 from rpclib.protocol.soap import Soap11
@@ -18,7 +18,13 @@ class MobiMoneyService(ServiceBase):
     def PaymentContract(ctx, PaymentID, PaymentTime, UserParams, Demo):
         user_params = parse_qs(UserParams)
         payment_pk = int(user_params['payment_pk'])
-        payment = Payment.objects.get(pk = payment_pk)
+        try:
+            payment = Payment.objects.get(pk = payment_pk)
+        except ObjectDoesNotExist:
+            raise Fault(faultcode='incorrect_request', faultstring='Неверный номер заказа')
+        if payment.status == Payment.STATUS_SUCCESS:
+            raise Fault(faultcode='already_paid')
+
         Sum = payment.amount
         Contract = '''
         <?xml version="1.0" encoding="utf-8"?>
@@ -37,6 +43,8 @@ class MobiMoneyService(ServiceBase):
         payment = Payment.objects.get(pk = payment_pk)
         if Sum == payment.amount:
             payment.status = Payment.STATUS_SUCCESS
+        else:
+            raise Fault(faultcode='error', faultstring='Сумма платежа не совпадает')
         payment.save()
         #TODO:уточнить формат ответа
         ReplyResourse = '''
@@ -50,9 +58,12 @@ class MobiMoneyService(ServiceBase):
         return ReplyResourse, ReplyResourceIsFailure
 
     @rpc(String, DateTime, Integer,String,String)
-    def PaymentCancellatuon(ctx, PaymentID, PaymentTime,  PaymentResult, PaymentResultStr, PayeeRegData):
+    def PaymentCancellation(ctx, PaymentID, PaymentTime,  PaymentResult, PaymentResultStr, PayeeRegData):
         payment_pk = int(PayeeRegData)
-        payment = Payment.objects.get(pk = payment_pk)
+        try:
+            payment = Payment.objects.get(pk = payment_pk)
+        except ObjectDoesNotExist:
+            raise Fault(faultcode='error', faultstring='Заказа с таким номером нет')
         payment.status = Payment.STATUS_FAILED
         payment.status = PaymentResultStr
         payment.save()
@@ -62,5 +73,6 @@ mobi_money_service = csrf_exempt(DjangoApplication(Application([MobiMoneyService
    'urn:PaycashShopService',
     interface=Wsdl11(),
     in_protocol=Soap11(),
-    out_protocol=Soap11()
+    out_protocol=Soap11(),
+    name='PaybackMobiMoney'
 )))
