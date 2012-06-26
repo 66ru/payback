@@ -76,6 +76,7 @@ mobi_money_service = csrf_exempt(DjangoApplication(Application([MobiMoneyService
     out_protocol=Soap11(),
     name='PaybackMobiMoney'
 )))
+
 def send_payment(payment):
     client_backend = ClientBackend.objects.get(client = payment.client, backend=payment.backend)
     cp = client_backend.get_config_parser()
