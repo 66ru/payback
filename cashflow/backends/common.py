@@ -18,3 +18,14 @@ class RedirectNeededException(CashflowBaseException):
 
     def get_url(self):
         return self.url
+
+class ReturnedTextException(CashflowBaseException):
+    def __init__(self, text, message,number, *args, **kwargs):
+        super(ReturnedTextException, self).__init__(message, *args, **kwargs)
+        self.text = text
+
+    def get_text(self):
+        return self.text
+
+    def get_number(self):
+        return self.number

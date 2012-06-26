@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.utils.decorators import available_attrs
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from cashflow.backends.common import SendPaymentFailureException, RedirectNeededException
+from cashflow.backends.common import SendPaymentFailureException, RedirectNeededException, ReturnedTextException
 from cashflow.forms import PaymentForm
 from models import *
 
@@ -72,6 +72,10 @@ def create_payment(request):
             p.status_message = ex.get_message()
             ret['status'] = 'failed'
             ret['status_message'] = p.status_message
+        except ReturnedTextException as ex:
+            ret['status'] = 'ok'
+            ret['text'] = ex.get_text()
+            ret['number'] = ex.get_number()
         finally:
             p.save()
 
