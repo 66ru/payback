@@ -38,13 +38,13 @@ def login_required_403(function=None):
         return actual_decorator(function)
     return actual_decorator
 
+
 @login_required_403
 @csrf_exempt
 @require_http_methods(["POST"])
 def currs_list(request):
-    return response_json({
-        'currs_list': Currency.get_listing()
-    })
+    currs = [{c.code: c.title} for c in Currency.objects.filter(backend__isnull=False)]
+    return response_json(currs)
 
 
 @login_required_403
