@@ -4,7 +4,10 @@ import cashflow.urls
 import gateauth.urls
 
 # Uncomment the next two lines to enable the admin:
+import settings
 from django.contrib import admin
+if settings.DEBUG:
+    from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 admin.autodiscover()
 
 urlpatterns = patterns('',
@@ -19,3 +22,11 @@ urlpatterns = patterns('',
     (r'^c/', include(cashflow.urls)),
     (r'^gateauth/', include(gateauth.urls)),
 )
+if settings.DEBUG:
+    # Remove leading and trailing slashes so the regex matches.
+    media_url = settings.MEDIA_URL.lstrip('/').rstrip('/')
+    urlpatterns += patterns('',
+        (r'^%s/(?P<path>.*)$' % media_url, 'django.views.static.serve',
+             {'document_root': settings.MEDIA_ROOT}),
+    )
+    urlpatterns += staticfiles_urlpatterns()
